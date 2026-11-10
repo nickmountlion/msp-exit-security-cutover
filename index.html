@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MSP exit security cutover | Case study</title>
+<meta name="description" content="Case study: revoking an outgoing IT and SOC provider across 19 systems in one weekend, with 0 hosts left on legacy remote tools and a SHA-256 evidence trail.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://nickmountlion.github.io/msp-exit-security-cutover/">
+<meta property="og:image" content="https://nickmountlion.github.io/msp-exit-security-cutover/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Taking security back in-house: an MSP exit on a 30-day clock">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:title" content="Taking security back in-house: an MSP exit on a 30-day clock">
+<meta property="og:description" content="Case study: revoking an outgoing IT and SOC provider across 19 systems in one weekend, with 0 hosts left on legacy remote tools and a SHA-256 evidence trail.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#f6f7f4;--surface:#ffffff;--fg:#17211f;--muted:#5b6865;--line:#d9dfdb;--accent:#0f5c4d;--crit:#b3402a;--warn:#c58a1b;--ok:#2f7d5b;--on-rate:#ffffff;--on-warn:#1f1700;
+--display:'Bricolage Grotesque','Segoe UI',sans-serif;--body:'IBM Plex Sans','Segoe UI',sans-serif;--mono:'IBM Plex Mono',Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1715;--surface:#16211e;--fg:#e6ece9;--muted:#9aaaa5;--line:#2a3a36;--accent:#5fc2a8;--crit:#e47a63;--warn:#e0b050;--ok:#64c298;--on-rate:#0f1715;--on-warn:#0f1715;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:920px;margin:0 auto;display:grid;gap:48px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:700}
+h2{font-size:1.5rem}h3{font-size:1.05rem}
+.eyebrow,.k{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+p{margin:0;max-width:65ch}
+header,section{display:grid;gap:14px;min-width:0}
+.lede{font-size:1.15rem;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.facts div{background:var(--surface);padding:14px;display:grid;gap:4px}
+.facts b{font:700 1.5rem var(--display);font-variant-numeric:tabular-nums}
+.bar{display:flex;height:34px;border-radius:3px;overflow:hidden;font:500 .85rem var(--mono);color:var(--on-rate)}
+.bar span{display:grid;place-items:center;min-width:0}
+.c{background:var(--crit)}.w{background:var(--warn);color:var(--on-warn)}.o{background:var(--ok)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:.9rem}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:var(--sw)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.col{background:var(--surface);border:1px solid var(--line);padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.col.rate{border-left:4px solid var(--sw)}
+.steps{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);counter-reset:s}
+.steps li{background:var(--surface);padding:14px;display:grid;gap:6px;align-content:start;counter-increment:s;font-size:.92rem}
+.steps li::before{content:"0" counter(s);font:500 .75rem var(--mono);color:var(--accent)}
+.steps b{font-family:var(--display);font-size:1.05rem}
+.stack{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.stack>div{background:var(--surface);padding:12px 14px;display:grid;grid-template-columns:150px 1fr;gap:6px 14px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{border:1px solid var(--line);border-radius:3px;padding:2px 8px;font-size:.86rem;background:var(--bg)}
+@media (max-width:560px){.stack>div{grid-template-columns:1fr}}
+.wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:.9rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-weight:500}
+ul{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.fit{border-top:2px solid var(--accent);padding-top:18px}
+small{color:var(--muted)}
+
+a{color:var(--accent)}
+a.col{text-decoration:none;color:inherit;transition:border-color .15s}
+a.col:hover{border-color:var(--accent)}
+a.col .go{color:var(--accent);font:500 .8rem var(--mono)}
+.note{border-left:3px solid var(--accent);padding:10px 14px;background:var(--surface);color:var(--muted);font-size:.95rem}
+footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:6px 18px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<span class="eyebrow">Case study · Identity, endpoint and access cutover</span>
+<h1>Taking security back in-house: an MSP exit on a 30-day clock</h1>
+<p class="lede">An outsourced IT and SOC provider held admin access across identity, the password vault, device management, the network and monitoring, and its contract was about to end. I led the consulting team that took that access back in one weekend, without an outage and with an evidence trail an auditor can follow.</p>
+<small>Facundo Montefalcone, security lead. Client and provider names and open findings are withheld.</small>
+</header>
+<div class="facts"><div><b>19</b><span class="k">Systems with provider admin access revoked</span></div><div><b>1</b><span class="k">Weekend cutover</span></div><div><b>7</b><span class="k">Engineers rotating in parallel</span></div><div><b>0</b><span class="k">Hosts left with legacy remote tools</span></div><div><b>19</b><span class="k">Evidence artifacts, SHA-256 verified</span></div><div><b>30 d</b><span class="k">Soft-delete window</span></div></div><section><h2>Context</h2><p>A mid-sized US company, sister organization of a fintech client, had outsourced IT and security monitoring to one provider for years. The fleet is almost entirely macOS on Apple silicon. New leadership decided to bring security in-house.</p><p>The provider contract ended about 30 days after formal notice. Its device-management tenant, monitoring billing and compliance tooling ended with it. I was security lead on a 7-person consulting team in Q4 2026.</p></section><section><h2>The problem</h2><div class="cols"><div class="col"><h3>Nobody had the full list</h3><p>Access had accumulated over years across about 27 business applications, 10 of them core. There was no single record of what the provider could reach.</p></div><div class="col"><h3>Order decides the outcome</h3><p>Rotate credentials in the wrong order and you lock out your own team, or leave a live session on the layer you have not reached yet.</p></div><div class="col"><h3>Hidden dependencies</h3><p>Cutting off a provider also cuts off what it quietly ran: the MDM tenant, log retention and compliance evidence.</p></div></div></section><section><h2>How I ran it</h2><ol class="steps" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))"><li><b>Discover</b>Audited the shared password vault entry by entry. Years of history were split by period across the team so it finished in days. I used an LLM to categorize the export, then verified by hand, and built the application inventory alongside it.</li><li><b>Access matrix</b>One sheet, one row per application: provider accounts, roles, how they authenticate, status. It became the single source of truth for the client and the team.</li><li><b>Runbook and Gantt</b>A step-by-step rotation runbook with owners, order, rollback and a communication plan. Rule: credential changes are announced to their owners before rotation, never after.</li><li><b>Cutover weekend</b>7 engineers rotated admin credentials and MFA factors in parallel: vault administrators first, then identity provider, network, MFA recovery channels, then SaaS.</li><li><b>Revoke and remove</b>Provider accounts suspended and roles stripped under a 30-day soft-delete policy to preserve audit trails. Legacy remote-management agents uninstalled by MDM script, then verified by policy: 0 hosts remaining.</li><li><b>Monitor and prove</b>Post-cutoff anomaly monitoring, a hunt for leftover persistence such as scheduled tasks, and a chain-of-custody log of 19 artifacts with SHA-256 hashes.</li></ol><p><span class="k">Deliverables</span><br>Consolidated access matrix, credential-rotation runbook, Gantt, provider deactivation tracker, chain-of-custody evidence log, post-cutover action plan with architecture evaluations.</p></section><section><h2>Why the order matters</h2><div class="wrap"><table><thead><tr><th>Layer</th><th>Action</th><th>Reason</th></tr></thead><tbody><tr><td>Password vault</td><td>Remove provider administrators first</td><td>Every other secret lives here</td></tr><tr><td>Identity provider</td><td>Rotate administrators, revoke provider users</td><td>It is the control plane for everything federated</td></tr><tr><td>Network edge and wireless</td><td>Rotate device admin passwords, remove provider source addresses and admin users</td><td>Closes the path that does not depend on single sign-on</td></tr><tr><td>MFA recovery channels</td><td>Move shared second factors to client-owned numbers and channels</td><td>Stops account recovery from undoing the rotation</td></tr><tr><td>SaaS and collaboration suite</td><td>Suspend accounts, strip roles, soft delete</td><td>Keeps ownership and audit history intact</td></tr><tr><td>Endpoints</td><td>Uninstall remote-access agents by MDM, verify by policy</td><td>Removes the last interactive path</td></tr></tbody></table></div></section><section><h2>Decisions after the cutover</h2><p>Taking the keys back was half the job. Each service the provider had been running needed a new home before the contract ended.</p><div class="wrap"><table><thead><tr><th>Area</th><th>Before</th><th>Decision</th><th>Trade-off I flagged</th></tr></thead><tbody><tr><td>Device management</td><td>Open-source MDM hosted in the provider tenant, expiring with the contract</td><td>Interim self-hosted instance on a managed PaaS (MySQL, Redis, encrypted object storage), then consolidation into the parent organization&#x27;s Apple MDM</td><td>Vendor export plus re-enrollment of every device</td></tr><tr><td>Monitoring</td><td>Separate observability platform billed through the provider</td><td>Consolidate into the EDR vendor&#x27;s SIEM and let the old contract lapse</td><td>Export and back up logs first: SOC 2 needs the retention</td></tr><tr><td>Enterprise browser</td><td>Legacy secure-browser product with unclear licensing</td><td>Managed Chrome Enterprise</td><td>Lost download-encryption controls, covered with the EDR browser extension</td></tr><tr><td>Compliance tooling</td><td>GRC platform under the provider contract</td><td>Export all evidence and move to the parent organization&#x27;s tooling</td><td>Confirm full deletion on the provider side</td></tr><tr><td>Endpoint detection</td><td>Standalone tenant</td><td>Sub-tenant under the parent, after assessing exposure management, prevention policies, device control and host firewall</td><td>Some prevention settings held back until scripts were tested</td></tr><tr><td>Identity</td><td>Applications signing in with local accounts</td><td>Federate about 27 applications through the identity provider, 10 core first</td><td>Two to three weeks, estimate padded on purpose</td></tr></tbody></table></div></section><section><h2>What I would tell the next team</h2><div class="cols"><div class="col"><h3>Start with the vault</h3><p>If the provider can still read the vault, every rotation after it is theatre.</p></div><div class="col"><h3>Announce before you rotate</h3><p>Owners hear about a credential change before it happens. Surprise lockouts cost more trust than they save time.</p></div><div class="col"><h3>Soft delete during notice</h3><p>Suspend and strip roles. Hard deletion waits until the audit trail has been exported.</p></div><div class="col"><h3>Minutes after every meeting</h3><p>In a handover the written record is a control. I sent minutes after every call.</p></div></div></section><section><h2>Stack</h2><div class="stack"><div><span class="k">Identity</span><div class="chips"><span>Okta</span><span>Google Workspace</span></div></div><div><span class="k">Secrets</span><div class="chips"><span>1Password</span></div></div><div><span class="k">Endpoint</span><div class="chips"><span>CrowdStrike Falcon</span><span>FleetDM</span><span>Jamf</span></div></div><div><span class="k">Monitoring</span><div class="chips"><span>Datadog</span><span>Falcon SIEM</span></div></div><div><span class="k">Network</span><div class="chips"><span>Next-generation firewall</span><span>Cloud-managed switching and wireless</span></div></div><div><span class="k">Method</span><div class="chips"><span>Access matrix</span><span>Runbook</span><span>Gantt</span><span>Chain of custody</span><span>SHA-256</span></div></div></div><small>Client, provider, staff and vendor contact names, addresses, configurations and open findings are withheld. Figures come from my own working records.</small></section>
+<footer><span>Case study by Facundo "Nick" Montefalcone</span><a href="https://nickmountlion.github.io/">Portfolio</a><a href="https://github.com/nickmountlion">GitHub</a><a href="https://nickmountlion.github.io/fintech-security-operations/">Related: building the security function</a></footer>
+</main>
+</body>
+</html>
